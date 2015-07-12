@@ -57,15 +57,12 @@ public class FlockManager : MonoBehaviour
         int count = 0;
         for (int i = 0; i < numberOfBoids; i++)
         {
-            if (!boids[i].Equals(boid))
-            {
-                float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-                if (distance > 0 && distance < boid.neighborRadius)
-                {
-                    velocity += boids[i].thisRigidbody.velocity;
-                    count++;
-                }
-            }
+            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
+			if (distance > 0 && distance < boid.neighborRadius)
+			{
+				velocity += boids[i].thisRigidbody.velocity;
+				count++;
+			}
         }
         if (count > 0)
         {
@@ -83,15 +80,12 @@ public class FlockManager : MonoBehaviour
         int count = 0;
         for (int i = 0; i < numberOfBoids; i++)
         {
-            if (!boids[i].Equals(boid))
-            {
-                float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-                if (distance > 0 && distance < boid.neighborRadius)
-                {
-                    centerOfMass += boids[i].transform.localPosition;
-                    count++;
-                }
-            }
+            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
+			if (distance > 0 && distance < boid.neighborRadius)
+			{
+				centerOfMass += boids[i].transform.localPosition;
+				count++;
+			}
         }
         if (count > 0)
         {
@@ -109,15 +103,12 @@ public class FlockManager : MonoBehaviour
         int count = 0;
         for (int i = 0; i < numberOfBoids; i++)
         {
-            if (!boids[i].Equals(boid))
-            {
-                float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-                if (distance > 0 && distance < boid.desiredSeparation)
-                {
-                    velocity -= (boids[i].transform.localPosition - boid.transform.localPosition).normalized / distance;
-                    count++;
-                }
-            }
+            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
+			if (distance > 0 && distance < boid.desiredSeparation)
+			{
+				velocity -= (boids[i].transform.localPosition - boid.transform.localPosition).normalized / distance;
+				count++;
+			}
         }
         if (count > 0)
         {
