@@ -6,9 +6,9 @@ public class FlockManager : MonoBehaviour
 
     public Boid boidPrefab;
     public int numberOfBoids;
-    public float alignmentWeight;
-    public float cohesionWeight;
-    public float separationWeight;
+    public float alignmentWeight; // 0.5
+    public float cohesionWeight; // 0.9
+    public float separationWeight; // 0.1
 
 
     private Boid[] boids;
@@ -43,7 +43,7 @@ public class FlockManager : MonoBehaviour
                     boid.showSeparationDebug(separation);
                 }
 
-                boid.thisRigidbody.velocity += (alignment + cohesion + separation);
+                boid.thisRigidbody.linearVelocity += (alignment + cohesion + separation);
                 //boid.thisRigidbody.AddForce(align(boid) * alignmentWeight);
                 //boid.thisRigidbody.AddForce(cohere(boid) * cohesionWeight);
                 //boid.thisRigidbody.AddForce(separate(boid) * separationWeight);
@@ -60,7 +60,7 @@ public class FlockManager : MonoBehaviour
             float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
 			if (distance > 0 && distance < boid.neighborRadius)
 			{
-				velocity += boids[i].thisRigidbody.velocity;
+				velocity += boids[i].thisRigidbody.linearVelocity;
 				count++;
 			}
         }

@@ -22,8 +22,8 @@ public class Boid : MonoBehaviour
     {
         // Components
         thisRigidbody = GetComponent<Rigidbody>();
-        neighborArea = transform.FindChild("NeighborArea");
-        separationArea = transform.FindChild("SeparationArea");
+        neighborArea = transform.Find("NeighborArea");
+        separationArea = transform.Find("SeparationArea");
 
         // Flock
         flockManager = GetComponentInParent<FlockManager>();
@@ -31,7 +31,7 @@ public class Boid : MonoBehaviour
         // Init
         transform.position = new Vector3(Random.value * 10f, Random.value * 10f, Random.value * 10f);
         //transform.position = new Vector3(Random.value * 10f, 0f, Random.value * 10f);
-        thisRigidbody.velocity = new Vector3(Random.value * 2 - 1, Random.value * 2 - 1, Random.value * 2 - 1);
+        thisRigidbody.linearVelocity = new Vector3(Random.value * 2 - 1, Random.value * 2 - 1, Random.value * 2 - 1);
         //thisRigidbody.velocity = new Vector3(Random.value * 2 - 1, 0f, Random.value * 2 - 1);
 
         neighborArea.localScale = new Vector3(neighborRadius * 2, neighborRadius * 2, neighborRadius * 2);
@@ -43,7 +43,7 @@ public class Boid : MonoBehaviour
 	
 	void Update ()
     {
-        transform.rotation = Quaternion.LookRotation(thisRigidbody.velocity);
+        transform.rotation = Quaternion.LookRotation(thisRigidbody.linearVelocity);
 
         if (debug)
         {
@@ -73,7 +73,7 @@ public class Boid : MonoBehaviour
         if (Vector3.Distance(transform.localPosition, Vector3.zero) > 40f)
         {
             //thisRigidbody.AddForce((Vector3.zero - transform.localPosition) * 0.01f);
-            thisRigidbody.velocity += (Vector3.zero - transform.localPosition) * 0.1f * Time.deltaTime;
+            thisRigidbody.linearVelocity += (Vector3.zero - transform.localPosition) * 0.1f * Time.deltaTime;
         }
     }
 
