@@ -3,29 +3,29 @@ using System.Collections;
 
 public class FlockManager : MonoBehaviour
 {
-
+    [SerializeField] private Transform flockFolder;
     public Boid boidPrefab;
+    [SerializeField] private Transform area;
     public int numberOfBoids;
     public float alignmentWeight; // 0.5
     public float cohesionWeight; // 0.9
     public float separationWeight; // 0.1
 
-
     private Boid[] boids;
 
-	
+
 	void Start ()
     {
         boids = new Boid[numberOfBoids];
 
         for (int i = 0; i < numberOfBoids; i++)
         {
-            boids[i] = Instantiate(boidPrefab, transform.position, Quaternion.identity) as Boid;
+            boids[i] = Instantiate(boidPrefab, transform.position, Quaternion.identity, flockFolder);
+            boids[i].Init(area.position, area.localScale.x * 0.5f);
             boids[i].transform.parent = transform;
         }
 	}
-	
-	
+
 	void FixedUpdate ()
     {
         for (int i = 0; i < numberOfBoids; i++)
@@ -33,9 +33,47 @@ public class FlockManager : MonoBehaviour
             Boid boid = boids[i];
             if (boid != null && boid.thisRigidbody != null)
             {
-                Vector3 alignment = align(boid) * alignmentWeight * Time.deltaTime;
-                Vector3 cohesion = cohere(boid) * cohesionWeight * Time.deltaTime;
-                Vector3 separation = separate(boid) * separationWeight * Time.deltaTime;
+                int count = 0, separateCount = 0;
+                Vector3 velocities = Vector3.zero;
+                Vector3 centerOfMass = Vector3.zero;
+                Vector3 velocity = Vector3.zero;
+
+                for (int j = 0; j < numberOfBoids; j++)
+                {
+                    Vector3 toBoid = boids[j].transform.position - boid.transform.position;
+
+                    float distance = toBoid.magnitude;
+                    if (distance > 0 && distance < boid.neighborRadius)
+                    {
+                        velocities += boids[j].thisRigidbody.linearVelocity;
+                        centerOfMass += boids[j].transform.position;
+
+                        if (distance < boid.desiredSeparation)
+                        {
+                            Vector3 norm = toBoid / distance;
+                            velocity -= norm / distance;
+                            separateCount++;
+                        }
+
+                        count++;
+                    }
+                }
+
+                Vector3 alignment = Vector3.zero;
+                Vector3 cohesion = Vector3.zero;
+                Vector3 separation = Vector3.zero;
+
+                if (count > 0)
+                {
+                    alignment = (velocities / (numberOfBoids - 1)).normalized * alignmentWeight * Time.deltaTime;
+                    cohesion = ((centerOfMass / (numberOfBoids - 1)) - boid.transform.position).normalized * cohesionWeight * Time.deltaTime;
+                }
+
+                if (separateCount > 0)
+                {
+                    separation = (velocity / (numberOfBoids - 1)).normalized * separationWeight * Time.deltaTime;
+                }
+
                 if (boid.debug)
                 {
                     boid.showAlignmentDebug(alignment);
@@ -43,80 +81,8 @@ public class FlockManager : MonoBehaviour
                     boid.showSeparationDebug(separation);
                 }
 
-                boid.thisRigidbody.linearVelocity += (alignment + cohesion + separation);
-                //boid.thisRigidbody.AddForce(align(boid) * alignmentWeight);
-                //boid.thisRigidbody.AddForce(cohere(boid) * cohesionWeight);
-                //boid.thisRigidbody.AddForce(separate(boid) * separationWeight);
+                boid.thisRigidbody.linearVelocity += alignment + cohesion + separation;
             }
         }
 	}
-
-    private Vector3 align(Boid boid)
-    {
-        Vector3 velocity = Vector3.zero;
-        int count = 0;
-        for (int i = 0; i < numberOfBoids; i++)
-        {
-            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-			if (distance > 0 && distance < boid.neighborRadius)
-			{
-				velocity += boids[i].thisRigidbody.linearVelocity;
-				count++;
-			}
-        }
-        if (count > 0)
-        {
-            return (velocity / (numberOfBoids - 1)).normalized;
-        }
-        else
-        {
-            return Vector3.zero;
-        }
-    }
-
-    private Vector3 cohere (Boid boid)
-    {
-        Vector3 centerOfMass = Vector3.zero;
-        int count = 0;
-        for (int i = 0; i < numberOfBoids; i++)
-        {
-            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-			if (distance > 0 && distance < boid.neighborRadius)
-			{
-				centerOfMass += boids[i].transform.localPosition;
-				count++;
-			}
-        }
-        if (count > 0)
-        {
-            return ((centerOfMass / (numberOfBoids - 1)) - boid.transform.localPosition).normalized;
-        }
-        else
-        {
-            return Vector3.zero;
-        }
-    }
-
-    private Vector3 separate (Boid boid)
-    {
-        Vector3 velocity = Vector3.zero;
-        int count = 0;
-        for (int i = 0; i < numberOfBoids; i++)
-        {
-            float distance = Vector3.Distance(boids[i].transform.localPosition, boid.transform.localPosition);
-			if (distance > 0 && distance < boid.desiredSeparation)
-			{
-				velocity -= (boids[i].transform.localPosition - boid.transform.localPosition).normalized / distance;
-				count++;
-			}
-        }
-        if (count > 0)
-        {
-            return (velocity / (numberOfBoids - 1)).normalized;
-        }
-        else
-        {
-            return Vector3.zero;
-        }
-    }
 }
