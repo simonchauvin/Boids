@@ -3,13 +3,17 @@ using System.Collections;
 
 public class FlockManager : MonoBehaviour
 {
+    [SerializeField] private bool debug;
     [SerializeField] private Transform flockFolder;
-    public Boid boidPrefab;
+    [SerializeField] private Boid boidPrefab;
     [SerializeField] private Transform area;
-    public int numberOfBoids;
-    public float alignmentWeight; // 0.5
-    public float cohesionWeight; // 0.9
-    public float separationWeight; // 0.1
+    public float neighborRadius;
+    public float desiredSeparation;
+    [SerializeField] private int numberOfBoids;
+    [SerializeField] private bool physics;
+    [SerializeField] private float alignmentWeight;
+    [SerializeField] private float cohesionWeight;
+    [SerializeField] private float separationWeight;
 
     private Boid[] boids;
 
@@ -31,27 +35,28 @@ public class FlockManager : MonoBehaviour
         for (int i = 0; i < numberOfBoids; i++)
         {
             Boid boid = boids[i];
-            if (boid != null && boid.thisRigidbody != null)
+            boid.debug = debug;
+            if (boid != null)
             {
                 int count = 0, separateCount = 0;
-                Vector3 velocities = Vector3.zero;
-                Vector3 centerOfMass = Vector3.zero;
                 Vector3 velocity = Vector3.zero;
+                Vector3 centerOfMass = Vector3.zero;
+                Vector3 distance = Vector3.zero;
 
                 for (int j = 0; j < numberOfBoids; j++)
                 {
-                    Vector3 toBoid = boids[j].transform.position - boid.transform.position;
+                    Vector3 toBoid = boid.transform.position - boids[j].transform.position;
 
-                    float distance = toBoid.magnitude;
-                    if (distance > 0 && distance < boid.neighborRadius)
+                    float distToNeighbor = toBoid.magnitude;
+                    if (distToNeighbor > 0 && distToNeighbor < neighborRadius)
                     {
-                        velocities += boids[j].thisRigidbody.linearVelocity;
+                        velocity += boids[j].GetVelocity();
                         centerOfMass += boids[j].transform.position;
 
-                        if (distance < boid.desiredSeparation)
+                        if (distToNeighbor < desiredSeparation)
                         {
-                            Vector3 norm = toBoid / distance;
-                            velocity -= norm / distance;
+                            Vector3 norm = toBoid / distToNeighbor;
+                            distance += norm / distToNeighbor;
                             separateCount++;
                         }
 
@@ -61,27 +66,26 @@ public class FlockManager : MonoBehaviour
 
                 Vector3 alignment = Vector3.zero;
                 Vector3 cohesion = Vector3.zero;
-                Vector3 separation = Vector3.zero;
-
                 if (count > 0)
                 {
-                    alignment = (velocities / (numberOfBoids - 1)).normalized * alignmentWeight * Time.deltaTime;
-                    cohesion = ((centerOfMass / (numberOfBoids - 1)) - boid.transform.position).normalized * cohesionWeight * Time.deltaTime;
+                    alignment = (velocity / count).normalized * alignmentWeight;
+                    cohesion = ((centerOfMass / count) - boid.transform.position).normalized * cohesionWeight;
                 }
 
+                Vector3 separation = Vector3.zero;
                 if (separateCount > 0)
                 {
-                    separation = (velocity / (numberOfBoids - 1)).normalized * separationWeight * Time.deltaTime;
+                    separation = (distance / separateCount).normalized * separationWeight;
                 }
 
-                if (boid.debug)
+                if (debug)
                 {
                     boid.showAlignmentDebug(alignment);
                     boid.showCohesionDebug(cohesion);
                     boid.showSeparationDebug(separation);
                 }
 
-                boid.thisRigidbody.linearVelocity += alignment + cohesion + separation;
+                boid.AddForce(alignment + cohesion + separation);
             }
         }
 	}

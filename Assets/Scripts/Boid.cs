@@ -5,14 +5,12 @@ using System.Xml.Serialization;
 public class Boid : MonoBehaviour
 {
     #region Parameters
-    [SerializeField] private float maxVelocity = 100;
-    public float neighborRadius;
-    public float desiredSeparation;
     public bool debug;
+    [SerializeField] private float maxVelocity = 100;
     #endregion
 
     #region Components
-    public Rigidbody thisRigidbody { get; private set; }
+    private Rigidbody thisRigidbody;
     private Transform neighborArea;
     private Transform separationArea;
     #endregion
@@ -22,8 +20,8 @@ public class Boid : MonoBehaviour
     private Vector3 gameAreaCenter;
     private float gameAreaRadius;
 
-	
-	void Start ()
+
+    private void Awake()
     {
         // Components
         thisRigidbody = GetComponent<Rigidbody>();
@@ -32,15 +30,16 @@ public class Boid : MonoBehaviour
 
         // Flock
         flockManager = GetComponentInParent<FlockManager>();
+    }
 
+    void Start ()
+    {
         // Init
         transform.position = new Vector3(Random.value * 10f, Random.value * 10f, Random.value * 10f);
         //transform.position = new Vector3(Random.value * 10f, 0f, Random.value * 10f);
         thisRigidbody.linearVelocity = new Vector3(Random.value * 2 - 1, Random.value * 2 - 1, Random.value * 2 - 1);
         //thisRigidbody.velocity = new Vector3(Random.value * 2 - 1, 0f, Random.value * 2 - 1);
 
-        neighborArea.localScale = new Vector3(neighborRadius * 2, neighborRadius * 2, neighborRadius * 2);
-        separationArea.localScale = new Vector3(desiredSeparation * 2, desiredSeparation * 2, desiredSeparation * 2);
         neighborArea.gameObject.SetActive(false);
         separationArea.gameObject.SetActive(false);
 	}
@@ -57,15 +56,28 @@ public class Boid : MonoBehaviour
 
         if (debug)
         {
-            neighborArea.gameObject.SetActive(true);
-            separationArea.gameObject.SetActive(true);
+            ShowDebug();
         }
         else
         {
-            neighborArea.gameObject.SetActive(false);
-            separationArea.gameObject.SetActive(false);
+            HideDebug();
         }
 	}
+
+    public void ShowDebug()
+    {
+        neighborArea.localScale = new Vector3(flockManager.neighborRadius * 2, flockManager.neighborRadius * 2, flockManager.neighborRadius * 2);
+        separationArea.localScale = new Vector3(flockManager.desiredSeparation * 2, flockManager.desiredSeparation * 2, flockManager.desiredSeparation * 2);
+
+        neighborArea.gameObject.SetActive(true);
+        separationArea.gameObject.SetActive(true);
+    }
+
+    public void HideDebug()
+    {
+        neighborArea.gameObject.SetActive(false);
+        separationArea.gameObject.SetActive(false);
+    }
 
     void FixedUpdate()
     {
@@ -92,6 +104,16 @@ public class Boid : MonoBehaviour
         {
             transform.localPosition = -transform.localPosition + (transform.localPosition - Vector3.zero).normalized;
         }
+    }
+
+    public void AddForce(Vector3 force)
+    {
+        thisRigidbody.linearVelocity += force * Time.deltaTime;
+    }
+
+    public Vector3 GetVelocity()
+    {
+        return thisRigidbody.linearVelocity;
     }
 
     public void showAlignmentDebug(Vector3 velocity)
